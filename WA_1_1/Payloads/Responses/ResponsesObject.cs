@@ -1,4 +1,7 @@
-﻿namespace WA_1_1.Payloads.Responses
+﻿using Azure;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+
+namespace WA_1_1.Payloads.Responses
 {
 	public class ResponsesObject<T>
 	{
@@ -26,6 +29,8 @@
 		{
 			return new ResponsesObject<T>(status, message, data);
 		}
+
+		
 
 	}
 }

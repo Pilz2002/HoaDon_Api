@@ -134,3 +134,4 @@ D:\WA_1_1\WA_1_1\obj\Debug\net8.0\refint\WA_1_1.dll
 D:\WA_1_1\WA_1_1\obj\Debug\net8.0\WA_1_1.pdb
 D:\WA_1_1\WA_1_1\obj\Debug\net8.0\WA_1_1.genruntimeconfig.cache
 D:\WA_1_1\WA_1_1\obj\Debug\net8.0\ref\WA_1_1.dll
+D:\WA_1_1\WA_1_1\obj\Debug\net8.0\WA_1_1.sourcelink.json

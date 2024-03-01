@@ -10,5 +10,7 @@ namespace WA_1_1.Services.Interfaces
 		ResponsesObject<Responses_HoaDon> SuaHoaDon(Request_SuaHoaDon request);
 		string TaoMaGiaoDich();
 		ResponsesObject<Responses_HoaDon> XoaHoaDon(Request_XoaHoaDon request);
+		IQueryable<Responses_HoaDon> LocHoaDon(Request_LayHoaDon request);
+		IQueryable<Responses_HoaDon> PhanTrang(IQueryable<Responses_HoaDon> input,int pageSize, int pageNumber);
 	}
 }
