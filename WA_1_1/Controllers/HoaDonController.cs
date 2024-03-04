@@ -32,5 +32,11 @@ namespace WA_1_1.Controllers
 		{
 			return Ok(_iHoaDonServices.XoaHoaDon(request));
 		}
+
+		[HttpPost("LocHoaDon")]
+		public IActionResult LayHoaDonTheoNamThang(Request_LayHoaDon request)
+		{
+			return Ok(_iHoaDonServices.LocHoaDon(request));
+		}
 	}
 }

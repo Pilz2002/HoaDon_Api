@@ -1,4 +1,6 @@
-﻿using System.ComponentModel;
+﻿using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.ComponentModel;
 using WA_1_1.AppDb;
 using WA_1_1.Entities;
 using WA_1_1.Payloads.Converters;
@@ -25,7 +27,7 @@ namespace WA_1_1.Services.Implements
 		public ResponsesObject<Responses_HoaDon> SuaHoaDon(Request_SuaHoaDon request)
 		{
 			HoaDon hoaDonUpdate = _context.HoaDon.SingleOrDefault(x => x.HoaDonId == request.HoaDonId);
-			if(hoaDonUpdate == null)
+			if (hoaDonUpdate == null)
 			{
 				return _responsesObject.ResponesError(StatusCodes.Status404NotFound, "Khong tim thay hoa don Id", null);
 			}
@@ -56,12 +58,12 @@ namespace WA_1_1.Services.Implements
 				return null;
 			}
 			List<ChiTietHoaDon> list = new List<ChiTietHoaDon>();
-			list = _context.ChiTietHoaDon.ToList().FindAll(x=>x.HoaDonId == hoaDonId);
-			
+			list = _context.ChiTietHoaDon.ToList().FindAll(x => x.HoaDonId == hoaDonId);
+
 			int tmp = 0;
 			foreach (var request in requests)
 			{
-				for(int i=tmp;i<list.Count;i++)
+				for (int i = tmp; i < list.Count; i++)
 				{
 					var sanPham = _context.SanPham.SingleOrDefault(x => x.SanPhamId == request.SanPhamId);
 					if (sanPham is null)
@@ -77,16 +79,16 @@ namespace WA_1_1.Services.Implements
 					break;
 				}
 				tmp++;
-            }
+			}
 			return list;
 		}
 
 		public ResponsesObject<Responses_HoaDon> ThemHoaDon(Request_ThemHoaDon request)
 		{
 			var khachHang = _context.KhachHang.SingleOrDefault(x => x.KhachHangId == request.KhachHangId);
-			if(khachHang is null)
+			if (khachHang is null)
 			{
-				return _responsesObject.ResponesError(StatusCodes.Status404NotFound,"Khong tim thay khach hang",null);
+				return _responsesObject.ResponesError(StatusCodes.Status404NotFound, "Khong tim thay khach hang", null);
 			}
 			HoaDon hoaDon = new HoaDon();
 			hoaDon.TenHoaDon = request.TenHoaDon;
@@ -103,9 +105,9 @@ namespace WA_1_1.Services.Implements
 			_context.HoaDon.Update(hoaDon);
 			_context.SaveChanges();
 			double? tongTien = 0;
-			foreach(var item in hoaDon.DsChiTietHoaDon)
+			foreach (var item in hoaDon.DsChiTietHoaDon)
 			{
-				tongTien += item.ThanhTien; 
+				tongTien += item.ThanhTien;
 			}
 			hoaDon.TongTien = tongTien;
 			_context.HoaDon.Update(hoaDon);
@@ -116,16 +118,16 @@ namespace WA_1_1.Services.Implements
 		private List<ChiTietHoaDon> ThemListChiTietHoaDon(int hoaDonId, List<Request_ThemChiTietHoaDon> requests)
 		{
 			var hoaDon = _context.HoaDon.SingleOrDefault(x => x.HoaDonId == hoaDonId);
-			if(hoaDon is null)
+			if (hoaDon is null)
 			{
 				return null;
 			}
 			List<ChiTietHoaDon> list = new List<ChiTietHoaDon>();
-            foreach (var request in requests)
-            {
+			foreach (var request in requests)
+			{
 				ChiTietHoaDon ct = new ChiTietHoaDon();
 				var sanPham = _context.SanPham.SingleOrDefault(x => x.SanPhamId == request.SanPhamId);
-				if(sanPham is null)
+				if (sanPham is null)
 				{
 					_context.HoaDon.Remove(hoaDon);
 					_context.SaveChanges();
@@ -137,17 +139,17 @@ namespace WA_1_1.Services.Implements
 				ct.SoLuong = request.SoLuong;
 				ct.ThanhTien = sanPham.GiaThanh * request.SoLuong;
 				list.Add(ct);
-            }
+			}
 			_context.ChiTietHoaDon.AddRange(list);
 			_context.SaveChanges();
 			return list;
-        }
+		}
 
 		public string TaoMaGiaoDich()
 		{
-			var currentTime = DateTime.Now.ToString("yyyyMMdd")+"_";
-			var soHoaDonTrongNgay = _context.HoaDon.Count(x => x.ThoiGianTao.Date == DateTime.Now.Date)+1;
-			return currentTime+soHoaDonTrongNgay.ToString();
+			var currentTime = DateTime.Now.ToString("yyyyMMdd") + "_";
+			var soHoaDonTrongNgay = _context.HoaDon.Count(x => x.ThoiGianTao.Date == DateTime.Now.Date) + 1;
+			return currentTime + soHoaDonTrongNgay.ToString();
 		}
 
 		public ResponsesObject<Responses_HoaDon> XoaHoaDon(Request_XoaHoaDon request)
@@ -157,6 +159,105 @@ namespace WA_1_1.Services.Implements
 			_context.HoaDon.Remove(hoaDon);
 			_context.SaveChanges();
 			return _responsesObject.ResponesSuccess("Xoa thanh cong", _converter.EntityToDTO(hoaDon));
+		}
+
+		public IQueryable<Responses_HoaDon> LocHoaDon(Request_LayHoaDon request)
+		{
+			//LayHoaDonTheoNam
+			if (request.Year != null && request.Month != null)
+			{
+				var hoaDons = _context.HoaDon.Where(x => x.ThoiGianCapNhat.Month == request.Month && x.ThoiGianCapNhat.Year == request.Year).ToList();
+				if (hoaDons == null)
+				{
+					return null;
+				}
+				foreach (var hoaDon in hoaDons)
+				{
+					hoaDon.DsChiTietHoaDon = LayDSChiTietHoaDon(hoaDon.HoaDonId);
+				}
+				List<Responses_HoaDon> ret = new List<Responses_HoaDon>();
+				foreach (var hoaDon in hoaDons)
+				{
+					ret.Add(_converter.EntityToDTO(hoaDon));
+				}
+				return PhanTrang(ret.AsQueryable(),request.PageSize,request.PageNumber);
+			}
+			//Lay hoa don theo ngay
+			else if (request.DayBegin != null && request.DayEnd != null)
+			{
+				var hoaDons = _context.HoaDon.Where(x => x.ThoiGianCapNhat.Day >= request.DayBegin && x.ThoiGianCapNhat.Day <= request.DayEnd).ToList();
+				if (hoaDons == null)
+				{
+					return null;
+				}
+				foreach (var item in hoaDons)
+				{
+					item.DsChiTietHoaDon = LayDSChiTietHoaDon(item.HoaDonId);
+				}
+				List<Responses_HoaDon> ret = new List<Responses_HoaDon>();
+				foreach (var item in hoaDons)
+				{
+					ret.Add(_converter.EntityToDTO(item));
+				}
+				return PhanTrang(ret.AsQueryable(), request.PageSize, request.PageNumber);
+			}
+			//lay theo tong tien
+			else if (request.MoneyMin != null && request.MoneyMax != null)
+			{
+				var hoaDons = _context.HoaDon.Where(x => x.TongTien >= request.MoneyMin && x.TongTien <= request.MoneyMax).ToList();
+				if (hoaDons == null)
+				{
+					return null;
+				}
+				foreach (var item in hoaDons)
+				{
+					item.DsChiTietHoaDon = LayDSChiTietHoaDon(item.HoaDonId);
+				}
+				List<Responses_HoaDon> ret = new List<Responses_HoaDon>();
+				foreach (var item in hoaDons)
+				{
+					ret.Add(_converter.EntityToDTO(item));
+				}
+				return PhanTrang(ret.AsQueryable(), request.PageSize, request.PageNumber);
+			}
+			//Lay hoa don theo ma hoac ten
+			else if (request.MaGiaoDichorTenHoaDon != null)
+			{
+				var hoaDons = _context.HoaDon.Where(x => x.MaGiaoDich == request.MaGiaoDichorTenHoaDon).ToList();
+				if (hoaDons == null)
+				{
+					return null;
+				}
+				List<Responses_HoaDon> ret = new List<Responses_HoaDon>();
+				foreach (var item in hoaDons)
+				{
+					ret.Add(_converter.EntityToDTO(item));
+				}
+				return PhanTrang(ret.AsQueryable(), request.PageSize, request.PageNumber);
+			}
+			//Lay theo ngay tao moi nhat
+			else
+			{
+				var hoaDons = _context.HoaDon.OrderByDescending(x => x.ThoiGianTao).ToList();
+				List<Responses_HoaDon> ret = new List<Responses_HoaDon>();
+				foreach (var hoaDon in hoaDons)
+				{
+					ret.Add(_converter.EntityToDTO(hoaDon));
+				}
+				return PhanTrang(ret.AsQueryable(), request.PageSize, request.PageNumber);
+			}
+		}
+
+		private List<ChiTietHoaDon> LayDSChiTietHoaDon(int hoaDonId)
+		{
+			List<ChiTietHoaDon> list = new List<ChiTietHoaDon>();
+			list = _context.ChiTietHoaDon.Where(x => x.HoaDonId == hoaDonId).ToList();
+			return list;
+		}
+
+		public IQueryable<Responses_HoaDon> PhanTrang(IQueryable<Responses_HoaDon> input, int pageSize, int pageNumber)
+		{
+			return input.Skip(pageSize * (pageNumber - 1)).Take(pageSize);
 		}
 	}
 }
